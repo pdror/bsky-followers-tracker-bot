@@ -4,6 +4,18 @@ import dotenv from 'dotenv';
 import {getTranslation, getUserLanguageByUser} from "../i18n/i18n.js";
 import {handleFollowerReportRequest, test} from "../controllers/followerController.js";
 import {initializeBot} from "../index.js";
+import {express} from 'express';
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+})
+
+app.get('/', (req, res) => {
+    res.send('Bot running');
+});
 
 export const initBot = async () => {
     dotenv.config();
@@ -58,7 +70,7 @@ export const initBot = async () => {
         const conversation = await message.getConversation();
         const author = await message.getSender();
         const user = await findUser(author.did);
-        const userLang = getUserLanguageByUser(user, mention.langs);
+        const userLang = getUserLanguageByUser(user, 'en');
         let reply;
         switch (true) {
             case message.text.includes('unfollowers'):
