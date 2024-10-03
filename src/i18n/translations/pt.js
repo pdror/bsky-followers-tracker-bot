@@ -9,4 +9,6 @@ export const pt = {
     unfollowersCount: "{count} pessoas deixaram de te seguir desde o último relatório:",
     unfollowersMessage: "😢 Oh não! Você perdeu {unfollowersCount} seguidores desde o último relatório:\n",
     accountsNotFound: "\n{notFoundCount} contas não puderam ser encontradas, talvez tenham sido desativadas",
+    languageUpdated: "Agora eu irei falar em {langCode}.",
+    help: `Comandos disponíveis:\n\n- 📊 relatorio: Obtenha um relatório de seguidores\n- 🆘 ajuda: Mostre esta mensagem de ajuda\n- 🌐 config lang 'code': Define o idioma (opções disponíveis: en (inglês), pt (português))\n- 🔄 config automatic on/off: Ativa/desativa relatórios automáticos que ocorrem toda semana. Essa função está atualmente em desenvolvimento.`,
 }

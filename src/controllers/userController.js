@@ -1,4 +1,8 @@
-import {User} from "../models/userModel.js";
+import { User } from "../models/userModel.js";
+import {getTranslation} from "../i18n/i18n.js";
+
+const supportedLanguages = ['en', 'pt'];
+const languageNames = ['english', 'portuguese'];
 
 export const saveUser = async (did, handle) => {
     try {
@@ -22,5 +26,19 @@ export const findUser = async (userDid) => {
     } catch(err) {
         console.error(`Error finding user: ${err}`);
         throw err;
+    }
+}
+
+export const configureLanguage = async(user, langCode) => {
+    try {
+        if(!supportedLanguages.includes(langCode)) {
+            user.configs.language = 'en';
+        }
+        user.configs.language = langCode;
+        await user.save();
+
+        return getTranslation('languageUpdated', langCode, { langCode })
+    } catch (err) {
+        console.error(`Error configuring language: ${err.message}`);
     }
 }

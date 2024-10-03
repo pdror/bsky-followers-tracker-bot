@@ -2,6 +2,10 @@ import { en } from "./translations/en.js";
 import { pt } from "./translations/pt.js";
 
 const translations = { en, pt };
+export const languages = {
+    en: 'english',
+    pt: 'português'
+}
 
 export const getTranslation = (key, lang, params = {}) => {
     const fallbackLang = 'en';

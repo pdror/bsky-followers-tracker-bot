@@ -9,4 +9,6 @@ export const en = {
     unfollowersCount: "{count} people have unfollowed you since your last report:",
     unfollowersMessage: "😢 Oh no! You lost {unfollowersCount} followers since the last report:\n",
     accountsNotFound: "\n{notFoundCount} accounts could not be found, maybe they were deactivaded",
+    languageUpdated: "Now I'll speak in {langCode}.",
+    help: `Available commands:\n\n- 📊 report: Get a followers report\n- 🆘 help: Show this help message\n- 🌐 config lang 'option': Set the language (available options: en (english), pt (portuguese))\n- 🔄 config automatic on/off: Enable/disable automatic reports that happens every week. Currently under development.`,
 }
