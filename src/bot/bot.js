@@ -110,13 +110,13 @@ export const initBot = async () => {
                     reply = await handleFollowerReportRequest(author.did, author.handle, userLang, session.accessJwt);
                     console.log(`Replying to ${author.displayName}: ${reply}`);
                     await conversation.sendMessage({ text: reply });
-                    return;
+                    break;
                 } catch (err) {
                     console.error(`Erro ao gerar relatório: ${err.message}`);
                     const text = getTranslation('error', userLang);
                     await conversation.sendMessage({ text: text });
+                    break;
                 }
-                break;
             case langConfigRegex.test(normalizedText):
                 try {
                     const [, langCode] = normalizedText.match(langConfigRegex);
