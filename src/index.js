@@ -21,6 +21,7 @@ export const initializeBot = async () => {
         await initBot();
     } catch (err) {
         console.error(`Error initializing bot: ${err.message}`);
+        console.log(err);
     }
 };
 

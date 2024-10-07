@@ -1,10 +1,10 @@
 //import { saveFollowers } from '../db/followerModel.js';
 //import { checkIfFirstTime, saveUser } from '../db/userModel.js';
 import axios from 'axios';
-import { saveUser } from '../controllers/userController.js';
-import { Follower } from '../models/followerModel.js';
-import { User } from '../models/userModel.js';
-import { FollowerBucket } from '../models/followerBucektModel.js';
+import {saveUser} from '../controllers/userController.js';
+import {Follower} from '../models/followerModel.js';
+import {User} from '../models/userModel.js';
+import ReinitializationRequiredError from "../errors/ReinitializationRequiredError.js";
 
 export const fetchHandles = async (actors, accessJwt) => {
     console.log(`Fetching ${actors.length} handles`);
@@ -92,6 +92,18 @@ export const handleMention = async (event, accessJwt) => {
     // }
 };
 
+export const fetchProfile = async (actor, accessJwt) => {
+    console.log(`Fetching profile for ${actor}`);
+    try {
+        const url = 'https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile';
+        const params = {actor: actor};
+        const response = await axios.get(url, {params: params});
+        return response.data;
+    } catch(err) {
+        console.error(`Error fetching handle: ${err.response?.status} - ${err.response?.data}`);
+    }
+}
+
 export const fetchFollowers = async (actor, accessJwt) => {
     console.log(`Fetching followers for ${actor}`);
     const url = 'https://bsky.social/xrpc/app.bsky.graph.getFollowers';
@@ -113,6 +125,13 @@ export const fetchFollowers = async (actor, accessJwt) => {
         try {
             const response = await axios.get(url, { headers: headers, params: params });
 
+            // Acessando os headers de rate-limit
+            const rateLimit = response.headers['ratelimit-limit'];
+            const remaining = response.headers['ratelimit-remaining'];
+            const resetTime = response.headers['ratelimit-reset'];
+
+            console.log(`Rate Limit: ${rateLimit} | Requests Remaining: ${remaining} | Reset Time: ${new Date(resetTime * 1000).toLocaleDateString()}`);
+
             const followersData = response.data;
 
             const followersList = followersData.followers.map(follower => ({
@@ -128,7 +147,7 @@ export const fetchFollowers = async (actor, accessJwt) => {
             if (!cursor) break;
         } catch (err) {
             console.error(`Error fetching followers: ${err.response?.status} - ${err.response?.data}`);
-            break;
+            throw new ReinitializationRequiredError('Received 400 status, bot reinitialization required');
         }
     }
 

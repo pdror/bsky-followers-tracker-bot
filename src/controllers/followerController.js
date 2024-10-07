@@ -1,5 +1,10 @@
 import { User } from '../models/userModel.js';
-import { saveFollowers, fetchFollowers, fetchHandles } from "../services/followerService.js";
+import {
+    saveFollowers,
+    fetchFollowers,
+    fetchHandles,
+    fetchProfile
+} from "../services/followerService.js";
 import { removeUnfollowers, saveFollowersInBuckets } from '../services/service.js';
 import { compareFollowers } from '../utils/compareFollowers.js';
 import { printUnfollowers } from '../utils/printUnfollowers.js';
@@ -15,6 +20,51 @@ export const test = async (userDid, userHandle, accessJwt) => {
     const storedFollowers = user.buckets.flatMap(bucket => bucket.followers);
     console.log(storedFollowers.length);
     console.log(storedFollowers[0]);
+};
+
+export const generateReportsForAllUsers = async (accessJwt) => {
+    try {
+        // Busca todos os usuários na base de dados
+        const users = await User.find().populate('buckets');
+
+        console.log(users);
+
+        if (users.length === 0) {
+            console.log("Nenhum usuário encontrado na base de dados.");
+            return [];
+        }
+
+        let reportArray = [];
+
+        // Percorre todos os usuários para gerar seus respectivos relatórios
+        for (const user of users) {
+            try {
+                // Extrai as informações necessárias para o relatório
+                const userDid = user.did;
+                const userProfile = await fetchProfile(userDid, accessJwt)
+                const userHandle = userProfile.handle;
+                const userLang = user.language || 'en'; // Idioma padrão 'en' se não tiver idioma no user
+
+                // Chama o metodo existente para gerar o relatório do usuário
+                const report = await handleFollowerReportRequest(userDid, userHandle, userLang, accessJwt);
+
+                // Acumula o relatório deste usuário
+                reportArray.push({ profile: userProfile, report: report });
+
+            } catch (err) {
+                console.error(`Erro ao gerar o relatório para o usuário ${user.did}: ${err.message}`);
+                // Continue para o próximo usuário mesmo se der erro neste
+                reportArray.push({ profile: userProfile, report: `Erro ao gerar o relatório para ${userHandle}` });
+            }
+        }
+
+        // Ao final, retorna ou faz algo com o relatório completo
+        return reportArray;
+
+    } catch (err) {
+        console.error(`Erro ao gerar relatórios para todos os usuários: ${err.message}`);
+        throw err;
+    }
 };
 
 export const handleFollowerReportRequest = async (userDid, userHandle, userLang, accessJwt) => {
@@ -61,7 +111,8 @@ export const handleFollowerReportRequest = async (userDid, userHandle, userLang,
         if(unfollowed.length > 0) {
             const handles = await fetchHandles(unfollowed, accessJwt);
             reply += printUnfollowers(unfollowed.length, handles);
-            await removeUnfollowers(userDid, unfollowed);
+            console.log(unfollowed);
+            //await removeUnfollowers(userDid, unfollowed);
         } else {
             reply += getTranslation('noUnfollowers', userLang);
         }
@@ -73,6 +124,7 @@ export const handleFollowerReportRequest = async (userDid, userHandle, userLang,
         return reply;
     } catch (err) {
         console.error(`Erro ao gerar o relatório de seguidores: ${err.message}`);
+        throw err;
     }
 };
 

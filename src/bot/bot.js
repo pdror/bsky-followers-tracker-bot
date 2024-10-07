@@ -2,8 +2,10 @@ import {Bot, EventStrategy} from "@skyware/bot";
 import {configureLanguage, findUser} from "../controllers/userController.js";
 import dotenv from 'dotenv';
 import {getTranslation, getUserLanguageByUser} from "../i18n/i18n.js";
-import {handleFollowerReportRequest, test} from "../controllers/followerController.js";
+import {generateReportsForAllUsers, handleFollowerReportRequest, test} from "../controllers/followerController.js";
 import {initializeBot} from "../index.js";
+import ReinitializationRequiredError from "../errors/ReinitializationRequiredError.js";
+import { setTimeout } from 'timers/promises';
 
 const langConfigRegex = /^config\s+lang\s+(\w+)$/i;
 
@@ -15,10 +17,7 @@ export const initBot = async () => {
         eventEmitterOptions: { strategy: EventStrategy.Polling, pollingInterval: 30 }
     });
 
-    const session = await bot.login({
-        identifier: process.env.BSKY_IDENTIFIER,
-        password: process.env.BSKY_PASSWORD
-    });
+    const session = await loginWithRetry(bot);
 
     console.log(`Bot logged in with session for ${session.handle}`);
 
@@ -29,7 +28,7 @@ export const initBot = async () => {
     bot.on("error", async (error) => {
         console.log(`Error connecting to bot: ${error.message}`);
 
-        setTimeout(() => {
+        await setTimeout(() => {
             console.log("Trying to reconnect...");
             initializeBot();
         }, 10000);
@@ -105,6 +104,19 @@ export const initBot = async () => {
 
         let reply;
         switch (true) {
+            case normalizedText.includes('generate_for_everyone') && author.did === process.env.BSKY_ADMIN_DID:
+                try {
+                    let replies = await generateReportsForAllUsers(session.accessJwt);
+                    for (const report of replies) {
+                        const conversation = await bot.getConversationForMembers([report.profile.did]);
+                        console.log(report.report);
+                        await conversation.sendMessage({ text: report.report });
+                    }
+                    break;
+                } catch (err) {
+                    console.error(`Error generating report for all users: ${err.message}`);
+                    break;
+                }
             case normalizedText.includes('report') || normalizedText.includes('relatorio'):
                 try {
                     reply = await handleFollowerReportRequest(author.did, author.handle, userLang, session.accessJwt);
@@ -115,6 +127,10 @@ export const initBot = async () => {
                     console.error(`Erro ao gerar relatório: ${err.message}`);
                     const text = getTranslation('error', userLang);
                     await conversation.sendMessage({ text: text });
+                    if(err instanceof ReinitializationRequiredError) {
+                        console.log('Reinitializing bot due to 400 status...');
+                        await initializeBot();
+                    }
                     break;
                 }
             case langConfigRegex.test(normalizedText):
@@ -139,3 +155,26 @@ export const initBot = async () => {
         }
     });
 };
+
+async function loginWithRetry(bot, maxRetries = 5, initialDelay = 10000) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const session = await bot.login({
+                identifier: process.env.BSKY_IDENTIFIER,
+                password: process.env.BSKY_PASSWORD
+            });
+            console.log('Login bem-sucedido!');
+            return session;
+        } catch (error) {
+            if (error.cause?.error === 'RateLimitExceeded' || error.error === 'AuthMissing') {
+                const delay = initialDelay * Math.pow(2, attempt - 1);
+                console.log(`Tentativa ${attempt} falhou. Erro: ${error.cause?.error || error.error}. Aguardando ${delay}ms antes de tentar novamente...`);
+                await setTimeout(delay);
+            } else {
+                console.error('Erro não esperado durante o login:', error);
+                throw error; // Se não for um erro de rate limit ou autenticação, propaga o erro
+            }
+        }
+    }
+    throw new Error('Falha ao fazer login após várias tentativas');
+}
