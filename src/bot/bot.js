@@ -115,6 +115,7 @@ export const initBot = async () => {
                     let reply = await generateReportForSpecificUser(userHandle, session.accessJwt);
                     const conversation = await bot.getConversationForMembers([userHandle]);
                     await conversation.sendMessage({ text: reply });
+                    break;
                 } catch (err) {
                     console.error(`Error generating report for user ${userHandle}: ${err.message}`);
                     break;

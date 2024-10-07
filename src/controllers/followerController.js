@@ -19,6 +19,7 @@ export const test = async (userDid, userHandle, accessJwt) => {
 
 export const generateReportForSpecificUser = async (userHandle, accessJwt) => {
     try {
+        console.log(`Gerando relatório para o usuário ${userHandle}...`);
         const userProfile = await fetchProfile(userHandle, accessJwt);
         const user = await User.findOne({ did: userProfile.did }).populate('buckets');
 
