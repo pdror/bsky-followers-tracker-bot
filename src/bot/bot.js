@@ -2,7 +2,12 @@ import {Bot, EventStrategy} from "@skyware/bot";
 import {configureLanguage, findUser} from "../controllers/userController.js";
 import dotenv from 'dotenv';
 import {getTranslation, getUserLanguageByUser} from "../i18n/i18n.js";
-import {generateReportsForAllUsers, handleFollowerReportRequest, test} from "../controllers/followerController.js";
+import {
+    generateReportForSpecificUser,
+    generateReportsForAllUsers,
+    handleFollowerReportRequest,
+    test
+} from "../controllers/followerController.js";
 import {initializeBot} from "../index.js";
 import ReinitializationRequiredError from "../errors/ReinitializationRequiredError.js";
 import { setTimeout } from 'timers/promises';
@@ -104,6 +109,16 @@ export const initBot = async () => {
 
         let reply;
         switch (true) {
+            case normalizedText.includes('generate_for_user') && author.did === process.env.BSKY_ADMIN_DID:
+                try {
+                    const userHandle = normalizedText.split('generate_for_user')[1].trim();
+                    let reply = await generateReportForSpecificUser(userHandle, session.accessJwt);
+                    const conversation = await bot.getConversationForMembers([userHandle]);
+                    await conversation.sendMessage({ text: reply });
+                } catch (err) {
+                    console.error(`Error generating report for user ${userHandle}: ${err.message}`);
+                    break;
+                }
             case normalizedText.includes('generate_for_everyone') && author.did === process.env.BSKY_ADMIN_DID:
                 try {
                     let replies = await generateReportsForAllUsers(session.accessJwt);

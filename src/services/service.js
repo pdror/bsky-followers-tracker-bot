@@ -9,7 +9,6 @@ import { BUCKET_SIZE } from '../utils/constants.js';
  * @returns {Promise<void>} - A promise that resolves when the followers are saved.
  */
 export const saveFollowersInBuckets = async (did, followers) => {
-    console.log(`Saving ${followers.length} new followers for ${did}`);
     try {
         // Finds the user in the database
         let user = await User.findOne({ did });
@@ -50,7 +49,7 @@ export const saveFollowersInBuckets = async (did, followers) => {
 
         user.last_checked = new Date();
         await user.save();
-        console.log(`Saved ${followers.length} followers for ${did}`);
+        console.log(`Saved ${followers.length} followers for ${did}: ${followers.map(f => f.did)}`);
     } catch (err) {
         console.error(`Error saving followers for ${did}: ${err}`);
     }

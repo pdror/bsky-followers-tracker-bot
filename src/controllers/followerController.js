@@ -1,15 +1,10 @@
-import { User } from '../models/userModel.js';
-import {
-    saveFollowers,
-    fetchFollowers,
-    fetchHandles,
-    fetchProfile
-} from "../services/followerService.js";
-import { removeUnfollowers, saveFollowersInBuckets } from '../services/service.js';
-import { compareFollowers } from '../utils/compareFollowers.js';
-import { printUnfollowers } from '../utils/printUnfollowers.js';
-import { differenceInDays, startOfDay } from 'date-fns';
-import { MAX_DAYS } from "../utils/constants.js";
+import {User} from '../models/userModel.js';
+import {fetchFollowers, fetchHandles, fetchProfile} from "../services/followerService.js";
+import {saveFollowersInBuckets} from '../services/service.js';
+import {compareFollowers} from '../utils/compareFollowers.js';
+import {printUnfollowers} from '../utils/printUnfollowers.js';
+import {differenceInDays, startOfDay} from 'date-fns';
+import {MAX_DAYS} from "../utils/constants.js";
 import {getTranslation} from "../i18n/i18n.js";
 
 export const test = async (userDid, userHandle, accessJwt) => {
@@ -22,12 +17,28 @@ export const test = async (userDid, userHandle, accessJwt) => {
     console.log(storedFollowers[0]);
 };
 
+export const generateReportForSpecificUser = async (userHandle, accessJwt) => {
+    try {
+        const userProfile = await fetchProfile(userHandle, accessJwt);
+        const user = await User.findOne({ did: userProfile.did }).populate('buckets');
+
+        if (!user) {
+            console.log("Nenhum usuário encontrado na base de dados.");
+            return;
+        }
+
+        const userLang = user.configs.language || 'en'; // Idioma padrão 'en' se não tiver idioma no user
+
+        return await handleFollowerReportRequest(userProfile.did, userHandle, userLang, accessJwt);
+    } catch(err) {
+        console.error(`Erro ao gerar o relatório para o usuário ${user.did}: ${err.message}`);
+    }
+}
+
 export const generateReportsForAllUsers = async (accessJwt) => {
     try {
         // Busca todos os usuários na base de dados
         const users = await User.find().populate('buckets');
-
-        console.log(users);
 
         if (users.length === 0) {
             console.log("Nenhum usuário encontrado na base de dados.");
@@ -43,7 +54,7 @@ export const generateReportsForAllUsers = async (accessJwt) => {
                 const userDid = user.did;
                 const userProfile = await fetchProfile(userDid, accessJwt)
                 const userHandle = userProfile.handle;
-                const userLang = user.language || 'en'; // Idioma padrão 'en' se não tiver idioma no user
+                const userLang = user.configs.language || 'en'; // Idioma padrão 'en' se não tiver idioma no user
 
                 // Chama o metodo existente para gerar o relatório do usuário
                 const report = await handleFollowerReportRequest(userDid, userHandle, userLang, accessJwt);
