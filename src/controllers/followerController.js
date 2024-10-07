@@ -1,6 +1,6 @@
 import {User} from '../models/userModel.js';
 import {fetchFollowers, fetchHandles, fetchProfile} from "../services/followerService.js";
-import {saveFollowersInBuckets} from '../services/service.js';
+import {removeUnfollowers, saveFollowersInBuckets} from '../services/service.js';
 import {compareFollowers} from '../utils/compareFollowers.js';
 import {printUnfollowers} from '../utils/printUnfollowers.js';
 import {differenceInDays, startOfDay} from 'date-fns';
