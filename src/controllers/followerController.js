@@ -124,7 +124,7 @@ export const handleFollowerReportRequest = async (userDid, userHandle, userLang,
             const handles = await fetchHandles(unfollowed, accessJwt);
             reply += printUnfollowers(unfollowed.length, handles);
             console.log(unfollowed);
-            //await removeUnfollowers(userDid, unfollowed);
+            await removeUnfollowers(userDid, unfollowed);
         } else {
             reply += getTranslation('noUnfollowers', userLang);
         }
