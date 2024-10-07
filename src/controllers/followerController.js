@@ -118,6 +118,7 @@ export const handleFollowerReportRequest = async (userDid, userHandle, userLang,
         const updatedFollowers = currentFollowers.map(f => f.did);  // Todos os DIDs dos seguidores atuais
 
         const { unfollowed, newFollowers } = compareFollowers(updatedFollowers, storedFollowers);
+        console.log(newFollowers);
 
         // Removes the unfollowers from the user followers collection
         if(unfollowed.length > 0) {

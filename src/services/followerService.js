@@ -106,10 +106,7 @@ export const fetchProfile = async (actor, accessJwt) => {
 
 export const fetchFollowers = async (actor, accessJwt) => {
     console.log(`Fetching followers for ${actor}`);
-    const url = 'https://bsky.social/xrpc/app.bsky.graph.getFollowers';
-    const headers = {
-        'Authorization': `Bearer ${accessJwt}`
-    };
+    const url = 'https://public.api.bsky.app/xrpc/app.bsky.graph.getFollowers';
     
     let allFollowers = [];
     let cursor = null;
@@ -123,7 +120,7 @@ export const fetchFollowers = async (actor, accessJwt) => {
         }
             
         try {
-            const response = await axios.get(url, { headers: headers, params: params });
+            const response = await axios.get(url, { params: params });
 
             // Acessando os headers de rate-limit
             const rateLimit = response.headers['ratelimit-limit'];
