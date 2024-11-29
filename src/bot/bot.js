@@ -6,7 +6,6 @@ import {
     generateReportForSpecificUser,
     generateReportsForAllUsers,
     handleFollowerReportRequest,
-    test
 } from "../controllers/followerController.js";
 import {initializeBot} from "../index.js";
 import ReinitializationRequiredError from "../errors/ReinitializationRequiredError.js";

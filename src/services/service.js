@@ -3,26 +3,26 @@ import { FollowerBucket } from '../models/followerBucektModel.js';
 import { BUCKET_SIZE } from '../utils/constants.js';
 
 /**
- * Saves followers in buckets for a given user.
- * @param {string} did - The user's unique identifier.
- * @param {Array} followers - The array of followers to be saved.
+ * Salva os seguidores em "baldes" para um determinado usuário.
+ * @param {string} did - O did único do usuário.
+ * @param {Array} followers - O array de seguidores a ser salvo.
  * @returns {Promise<void>} - A promise that resolves when the followers are saved.
  */
 export const saveFollowersInBuckets = async (did, followers) => {
     try {
-        // Finds the user in the database
+        // Obtém o usuário na base de dados
         let user = await User.findOne({ did });
         if(!user) {
             user = new User({ did, buckets: [] });
         }
 
-        // Gets the last bucket
+        // Obtém seu último balde
         let lastBucket;
         if(user.buckets.length > 0) {
             lastBucket = await FollowerBucket.findById(user.buckets[user.buckets.length - 1]);
         }
 
-        // Splits the followers into buckets
+        // Divide os seguidores entre os baldes
         let remainingFollowers = [...followers];
         let bucketIndex = user.buckets.length;
 
@@ -56,9 +56,9 @@ export const saveFollowersInBuckets = async (did, followers) => {
 };
 
 /**
- * Remove the unfollowers from the user followers collection.
- * @param {String} userDid - User's did.
- * @param {Array} currentFollowers - List of actual dids of the user followers.
+ * Remove aqueles que deixaram de seguir o usuário da sua coleção de seguidores.
+ * @param {String} userDid - Did do usuário.
+ * @param {Array} currentFollowers - Lista de seguidores atuais do usuário.
  */
 export const removeUnfollowers = async (userDid, currentFollowers) => {
     try {
@@ -82,34 +82,6 @@ export const removeUnfollowers = async (userDid, currentFollowers) => {
         }
 
         const removedCount = currentFollowers.length;
-
-        // for(let bucket in user.buckets) {
-        //     const followersBucket = await FollowerBucket.findOne({ id : bucket._id });
-        //     const followers = followersBucket.followers.filter(did => currentFollowersSet.has(did));
-        //     console.log(followersBucket);
-        //     console.log(followers);
-
-        //     if(followers.length > 0) {
-        //         await followersBucket.save();
-        //     } else {
-        //         FollowerBucket.deleteOne({ _id: bucket._id });
-        //     }
-        // }
-
-        // // Removes the unfollowers from the buckets
-        // let updatedBuckets = user.buckets.flatMap(bucket => {
-        //     console.log(bucket.followers);
-        //     return bucket.followers.filter(did => currentFollowersSet.has(did))
-        // });
-
-        // console.log(updatedBuckets);
-
-        // // Removes empty buckets
-        // updatedBuckets = updatedBuckets.filter(bucket => bucket.length > 0);
-
-        // // Updates the user buckets and save it
-        // user.followers = updatedBuckets;
-        // await user.save();
 
         console.log(`Removed ${removedCount} unfollowers for ${userDid}`);
     } catch (err) {

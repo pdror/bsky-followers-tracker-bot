@@ -7,16 +7,6 @@ import {differenceInDays, startOfDay} from 'date-fns';
 import {MAX_DAYS} from "../utils/constants.js";
 import {getTranslation} from "../i18n/i18n.js";
 
-export const test = async (userDid, userHandle, accessJwt) => {
-    const user = await User.findOne({ did: userDid}).populate('buckets');
-    console.log(user);
-    
-    
-    const storedFollowers = user.buckets.flatMap(bucket => bucket.followers);
-    console.log(storedFollowers.length);
-    console.log(storedFollowers[0]);
-};
-
 export const generateReportForSpecificUser = async (userHandle, accessJwt) => {
     try {
         console.log(`Gerando relatório para o usuário ${userHandle}...`);

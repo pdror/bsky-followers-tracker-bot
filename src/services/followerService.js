@@ -1,9 +1,5 @@
-//import { saveFollowers } from '../db/followerModel.js';
-//import { checkIfFirstTime, saveUser } from '../db/userModel.js';
 import axios from 'axios';
-import {saveUser} from '../controllers/userController.js';
 import {Follower} from '../models/followerModel.js';
-import {User} from '../models/userModel.js';
 import ReinitializationRequiredError from "../errors/ReinitializationRequiredError.js";
 
 export const fetchHandles = async (actors, accessJwt) => {
@@ -33,63 +29,6 @@ export const fetchHandles = async (actors, accessJwt) => {
     }
 
     return allHandles;
-};
-
-export const getUserFollowers = async (userDid) => {
-    const user = await User.findOne({ did: userDid }).populate('buckets');
-    return user.buckets.flatMap(bucket => bucket.followers);
-}
-
-export const handleMessage = async (message, accessJwt) => {
-    const conversation = await message.getConversation();
-    const author = await message.getSender();
-    if(message.text.includes('check_unfollowers')) {
-        try {
-                const currentFollowers = await fetchFollowers(author.handle, accessJwt);
-                await saveUser(author.did, author.handle);
-                await saveFollowers(author.did, currentFollowers);
-                await conversation.sendMessage({ text : `Olá @${author.displayName}, estou monitorando seus seguidores a partir de agora. Você tem atualmente ${currentFollowers.length} seguidores.` });
-                return;
-
-        } catch(err) {
-            console.error(`Erro ao gerar relatório: ${err.message}`);
-            await conversation.sendMessage({ text: `Desculpe, estou passando por alguns problemas no momento` });
-        }
-    }
-};
-
-export const handleMention = async (event, accessJwt) => {
-    // if(text.includes('check_unfollowers')) {        
-    //     try {
-    //         const isFirstTime = await checkIfFirstTime(author.handle);
-
-    //         if(isFirstTime) {
-    //             const currentFollowers = await fetchFollowers(author.handle, accessJwt);
-    //             await saveUser(author.did, author.handle);
-    //             await saveFollowers(author.did, currentFollowers);
-    //             await event.reply({ text : `Olá @${author.displayName}, estou monitorando seus seguidores a partir de agora` });
-    //             return;
-    //         }
-
-    //         const unfollowed = await getUnfollowers();
-    //         const activeFollowers = await getActiveFollowers();
-
-    //         let replyMessage = `Olá @${author.displayName}, aqui está o seu relatório:\n`;
-
-    //         if(unfollowed.length > 0) {
-    //             replyMessage += `Você perdeu ${unfollowed.length} seguidores:\n`;
-    //         } else {
-    //             replyMessage += `Você não perdeu seguidores recentemente.\n`;
-    //         }
-
-    //         replyMessage += `Você tem ${activeFollowers.length} seguidores ativos.`;
-
-    //         await event.reply(id, replyMessage);
-    //     } catch(err) {
-    //         console.error(`Erro ao gerar relatório: ${err.message}`);
-    //         await event.reply(id, `Desculpe, estou passando por alguns problemas no momento`);
-    //     }
-    // }
 };
 
 export const fetchProfile = async (actor, accessJwt) => {
@@ -162,44 +101,3 @@ export const saveFollowers = async (did, followers) => {
     console.log(`Saved ${followers.length} followers for ${did}`);
     return followers.length;
 }
-
-// async function getUnfollowers(handle) {
-//     return new Promise((resolve, reject) => {
-//         const query = `
-//             SELECT follower_handle 
-//             FROM followers 
-//             WHERE user_id = (SELECT id FROM usuarios WHERE handle = ?)
-//             AND is_active = 0 
-//             AND unfollowed_at IS NOT NULL
-//         `;
-
-//         db.all(query, [handle], (err, rows) => {
-//             if(err) {
-//                 return reject(err);
-//             }
-
-//             const lostFollowers = rows.map(row => row.follower_handle);
-//             resolve(lostFollowers);
-//         })
-//     });
-// }
-
-// async function getActiveFollowers(handle) {
-//     return new Promise((resolve, reject) => {
-//         const query = `
-//             SELECT follower_handle 
-//             FROM followers 
-//             WHERE user_id = (SELECT id FROM usuarios WHERE handle = ?)
-//             AND is_active = 1
-//         `;
-
-//         db.all(query, [handle], (err, rows) => {
-//             if(err) {
-//                 return reject(err);
-//             }
-
-//             const activeFollowers = rows.map(row => row.follower_handle);
-//             resolve(activeFollowers);
-//         })
-//     });
-// }
